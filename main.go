@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"purchaseOrderSystem/components"
+	"text/template"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 // TODO: Add authentcation middleware
@@ -21,28 +24,38 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading environment variables")
 	}
-	fmt.Println("Started server on port", os.Getenv("PORT"))
+
+	// initiating database connection
+	// TODO: Need to separate this out into another module
+	dsn := fmt.Sprintf("host=%s port=%s user=%s "+
+		"password=%s dbname=%s sslmode=disable", os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Fatal("DB initialisation error occrured: ", err)
+	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("DB ping error occrured: ", err)
+	}
+	defer db.Close()
+	// TODO: Need to setup up docker for postgres database. So boring and one of the most important part needs to be done - database structure.
 
 	r := chi.NewRouter()
-	// creating file server for static files
-	dir := http.Dir("./static")
-	fs := http.FileServer(dir)
 
-	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusFound)
-		components.Hello("Aman").Render(context.Background(), w)
-	})
-	r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusAlreadyReported)
-		// FIX: Need to add html fileserver or serve files with templ (inefficient)
-	})
+	// creating file server for static files
+	dir := http.Dir("./static")
+	fs := http.FileServer(dir)
+	r.Handle("/static/*", http.StripPrefix("/static/", fs))
+
+	// Public unathenticated routes
+	r.Mount("/", PublicRouter())
 
 	// Routes for User accounts
-	r.Mount("/user/", UserRouter())
+	r.Mount("/user", UserRouter())
 
 	// Routes for Manager accounts
 	r.Mount("/manager", ManagerRouter())
@@ -60,6 +73,23 @@ func main() {
 	})
 
 	http.ListenAndServe(os.Getenv("PORT"), r)
+}
+func PublicRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusFound)
+		components.Hello("Aman").Render(context.Background(), w)
+	})
+	// FIX: not the best way to serve static pages. I have to find a better way
+	signupPage := template.Must(template.ParseFiles("public/signup.html"))
+	r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusAlreadyReported)
+		signupPage.Execute(w, nil)
+	})
+	r.Post("/signup", func(w http.ResponseWriter, r *http.Request) {
+		// TODO: Link with signup services
+	})
+	return r
 }
 
 // admin router configuration
