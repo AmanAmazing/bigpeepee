@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,8 +11,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
 // TODO: Add authentcation middleware
@@ -26,19 +25,12 @@ func main() {
 	}
 	// initiating database connection
 	// TODO: Need to separate this out into another module
-	dsn := fmt.Sprintf("host=%s port=%s user=%s "+
-		"password=%s dbname=%s sslmode=disable", os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
-	db, err := sql.Open("postgres", dsn)
+	dsn := fmt.Sprintf("%s://%s:%s@localhost:%s/%s", os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
+	db_pool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
-		log.Fatal("DB initialisation error occrured: ", err)
+		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	err = db.Ping()
-	if err != nil {
-		log.Fatal("DB ping error occrured: ", err)
-	}
-	defer db.Close()
-	// TODO: Need to setup up docker for postgres database. So boring and one of the most important part needs to be done - database structure.
+	defer db_pool.Close()
 
 	r := chi.NewRouter()
 
