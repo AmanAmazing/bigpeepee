@@ -24,7 +24,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading environment variables")
 	}
-
 	// initiating database connection
 	// TODO: Need to separate this out into another module
 	dsn := fmt.Sprintf("host=%s port=%s user=%s "+

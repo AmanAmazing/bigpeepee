@@ -1,5 +1,3 @@
-Certainly! Let's walk through the typical flow of a purchase order and how the database will be queried at each stage.
-
 1. Creating a Purchase Order:
    - A user creates a new purchase order by inserting a record into the `purchase_orders` table with the necessary details such as user ID, department ID, description, total amount, and initial status (e.g., "Pending").
    - The purchase order items are inserted into the `purchase_order_items` table, referencing the newly created purchase order ID.
