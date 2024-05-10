@@ -9,8 +9,7 @@ Maybe some react for dynamic stuff - Big maybe but I don't think I will need it.
 
 ## Docker instructions
 remember to delete any existing postgres-data folder that may have accidentally been left over. I don't do database migrations, I just rebuild it lol
-`docker compose build` 
-`docker compose up` 
+`docker compose build` `docker compose up` 
 
 ### Running it in the background and displaying logs
 `docker-compose up -d`
@@ -33,6 +32,7 @@ Even with these environment variables, pgAdmin does not support automatically cr
             - Password: Enter the PostgreSQL password (e.g., "admin").
     5) Click 'Save'.
 
-## Initial system design 
-This can be seen in the file ./init-system-design.svg
-
+## Initial system design This can be seen in the file ./init-system-design.svg the ./postgres-init/init.sql shows the database structure. I ain't no fucking database expert so don't come for me! 
+I tried to make the system semi flexible :) just realised the smiley face looks bloody wonky in the font on vim (use vim btw). 
+TODO! Need to add a total price section in the purchase_orders table
+TODO! Need to add notification section to the database init file 

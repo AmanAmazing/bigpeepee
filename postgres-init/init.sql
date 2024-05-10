@@ -1,69 +1,54 @@
 --- Users table -----
-CREATE TABLE Users (
-    user_id SERIAL PRIMARY KEY,
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     phone_number VARCHAR(100),
     password_hash VARCHAR(255) NOT NULL
 );
 
---- Capsules table -----
-CREATE TABLE Capsules (
-    capsule_id SERIAL PRIMARY KEY,
-    user_id INT,  -- Capsule Owner
-    title VARCHAR(255),
-    description TEXT,
-    open_date DATE,
-    is_public BOOLEAN,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+CREATE TABLE departments (
+    id  SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
 );
 
-
---- Capsule Content table ---- 
-CREATE TYPE ContentType AS ENUM ('text','image','video');
-CREATE TABLE Capsule_Content (
-    content_id SERIAL PRIMARY KEY,
-    capsule_id INT,
-    content_type ContentType, 
-    content_data Text, -- For text, store as text. For images/videos, store file path/url 
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (capsule_id) REFERENCES Capsules(capsule_id)
+CREATE TABLE roles(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
 );
 
---- Capsule Access ---- 
-CREATE TABLE Capsule_Access(
-    access_id SERIAL PRIMARY KEY, 
-    user_id INT,
-    capsule_id INT,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    FOREIGN KEY (capsule_id) REFERENCES Capsules(capsule_id)
+CREATE TABLE user_roles (
+    user_id INTEGER REFERENCES users(id),
+    role_id INTEGER REFERENCES roles(id),
+    PRIMARY KEY (user_id,role_id)
 );
 
-
-
-CREATE TABLE Capsule_Comments (
-    comment_id SERIAL PRIMARY KEY, 
-    capsule_id INT, 
-    user_id INT,
-    comment_text TEXT,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (capsule_id) REFERENCES Capsules(capsule_id),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+CREATE TABLE purchase_orders (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    department_id INTEGER REFERENCES departments(id),
+    description TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TYPE NotificationType AS ENUM ('decision_made','comment_added');
-CREATE TABLE Notifications (
-    notification_id SERIAL PRIMARY KEY,
-    user_id INT, 
-    capsule_id INT,
-    notification_type NotificationType,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    FOREIGN KEY (capsule_id) REFERENCES Capsules(capsule_id)
+CREATE TABLE purchase_order_items (
+    id SERIAL PRIMARY KEY,
+    purchase_order_id INTEGER REFERENCES purchase_orders(id),
+    item_name VARCHAR(255) NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL
 );
 
--- Need application logic to insert notification into this table when capsules open_date becomes the current date 
--- Insert a nottification when a new comment is added to a capsule 
+CREATE TABLE purchase_order_approvals (
+    id SERIAL PRIMARY KEY,
+    purchase_order_id INTEGER REFERENCES purchase_orders(id),
+    approver_id INTEGER REFERENCES users(id),
+    status VARCHAR(20) NOT NULL,
+    comments TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
