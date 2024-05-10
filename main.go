@@ -11,12 +11,18 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth"
+	"github.com/golang-jwt/jwt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
-// TODO: Add authentcation middleware
 // FIX: Need to fix templ support for neovim
+var tokenAuth *jwtauth.JWTAuth
+
+func init() {
+	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET_KEY")), nil)
+}
 
 func main() {
 	err := godotenv.Load()
@@ -36,6 +42,7 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(jwtauth.Verifier(tokenAuth))
 
 	// creating file server for static files
 	dir := http.Dir("./static")
@@ -65,6 +72,8 @@ func main() {
 
 	http.ListenAndServe(os.Getenv("PORT"), r)
 }
+
+// This router is for all urls that are publically accessible
 func PublicRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -88,8 +97,8 @@ func PublicRouter() http.Handler {
 // adminOnly midddleware that restricts access to just administrators
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isAdmin, ok := r.Context().Value("user.admin").(bool)
-		if !ok || !isAdmin {
+		_, claims, _ := jwtauth.FromContext(r.Context())
+		if claims["role"] != "admin" {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
@@ -100,7 +109,6 @@ func AdminOnly(next http.Handler) http.Handler {
 // adminRouter is for routes for all admins
 func AdminRouter() http.Handler {
 	r := chi.NewRouter()
-	// TODO: need to add authentication middleware
 	r.Use(AdminOnly)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello admin"))
@@ -111,8 +119,8 @@ func AdminRouter() http.Handler {
 // ManagerOnly midddleware that restricts access to just administrators
 func ManagerOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isManager, ok := r.Context().Value("user.manager").(bool)
-		if !ok || !isManager {
+		_, claims, _ := jwtauth.FromContext(r.Context())
+		if claims["role"] != "manager" {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
@@ -123,7 +131,6 @@ func ManagerOnly(next http.Handler) http.Handler {
 // ManagerRouter is for routes for all managers
 func ManagerRouter() http.Handler {
 	r := chi.NewRouter()
-	// TODO: need to add authentication middleware
 	r.Use(ManagerOnly)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello Manager"))
@@ -134,8 +141,8 @@ func ManagerRouter() http.Handler {
 // UserOnly midddleware that restricts access to just administrators
 func UserOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isUser, ok := r.Context().Value("user.user").(bool)
-		if !ok || !isUser {
+		_, claims, _ := jwtauth.FromContext(r.Context())
+		if claims["role"] != "user" {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
@@ -152,4 +159,13 @@ func UserRouter() http.Handler {
 		w.Write([]byte("Hello User"))
 	})
 	return r
+}
+
+func GenerateJWT(claims map[string]interface{}) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(claims))
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
