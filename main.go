@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"purchaseOrderSystem/auth"
 	"purchaseOrderSystem/database"
 	"purchaseOrderSystem/routes"
 
@@ -13,11 +12,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main() {
+func init() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading environment variables")
 	}
+}
+
+func main() {
 	// initiating database connection
 	db, err := database.InitDB()
 	if err != nil {
@@ -32,7 +34,6 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(auth.JWTMiddleware)
 
 	// creating file server for static files
 	dir := http.Dir("./static")

@@ -7,7 +7,7 @@ import (
 // adminOnly midddleware that restricts access to just administrators
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isAdmin, ok := r.Context().Value("user.admin").(bool)
+		isAdmin, ok := r.Context().Value("role").(bool)
 		if !ok || !isAdmin {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
@@ -19,7 +19,7 @@ func AdminOnly(next http.Handler) http.Handler {
 // ManagerOnly midddleware that restricts access to just administrators
 func ManagerOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isManager, ok := r.Context().Value("user.manager").(bool)
+		isManager, ok := r.Context().Value("role").(bool)
 		if !ok || !isManager {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
@@ -31,7 +31,7 @@ func ManagerOnly(next http.Handler) http.Handler {
 // UserOnly midddleware that restricts access to just administrators
 func UserOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isUser, ok := r.Context().Value("user.user").(bool)
+		isUser, ok := r.Context().Value("role").(bool)
 		if !ok || !isUser {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return

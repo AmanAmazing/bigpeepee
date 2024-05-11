@@ -37,13 +37,13 @@ func TestDB() {
 	('admin'),
 	('manager'),
 	('user');
-
+'$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a'
 	-- Insert test users
 	insert into users (email, username, password) values
-	('john@example.com', 'johndoe', '$2a$14$xrr8iyht40fgq75ijylko.zktdbdadmtxi2.zarpxkjhlky8onbqq'),
-	('jane@example.com', 'janesmith', '$2a$14$xrr8iyht40fgq75ijylko.zktdbdadmtxi2.zarpxkjhlky8onbqq'),
-	('mike@example.com', 'mikejohnson', '$2a$14$xrr8iyht40fgq75ijylko.zktdbdadmtxi2.zarpxkjhlky8onbqq'),
-	('emily@example.com', 'emilybrown', '$2a$14$xrr8iyht40fgq75ijylko.zktdbdadmtxi2.zarpxkjhlky8onbqq');
+	('john@example.com', 'johndoe', '$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a'),
+	('jane@example.com', 'janesmith', '$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a'),
+	('mike@example.com', 'mikejohnson', '$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a'),
+	('emily@example.com', 'emilybrown', '$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a');
 
 	-- Insert user roles
 	insert into user_roles (user_id, role_id)
