@@ -12,6 +12,12 @@ CREATE TABLE departments (
     name VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE user_departments (
+    user_id INTEGER REFERENCES users(id),
+    department_id INTEGER REFERENCES departments(id),
+    PRIMARY KEY (user_id,department_id)
+);
+
 CREATE TABLE roles(
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL

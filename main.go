@@ -25,6 +25,9 @@ func main() {
 	}
 	defer db.Close()
 
+	// insert test data into the database
+	// database.TestDB() // FIX: not best practice. Need to return err from this
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)

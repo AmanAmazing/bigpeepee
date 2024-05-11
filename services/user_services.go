@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"errors"
+	"log"
 	"purchaseOrderSystem/utils"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -29,7 +29,7 @@ func (s *UserService) Signup(email, username, password string) error {
 	_, err = s.db.Exec(context.Background(), "INSERT INTO users (email,username,password) VALUES ($1,$2,$3)", email, username, hashedPassword)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" {
-			return errors.New("username has already been registered")
+			log.Printf("username %s has already been registered", username)
 		}
 		return err
 	}
