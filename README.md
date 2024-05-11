@@ -36,3 +36,11 @@ Even with these environment variables, pgAdmin does not support automatically cr
 I tried to make the system semi flexible :) just realised the smiley face looks bloody wonky in the font on vim (use vim btw). 
 TODO! Need to add a total price section in the purchase_orders table
 TODO! Need to add notification section to the database init file 
+
+
+## Code layout 
+The `main.go` file is only for setting up the paths and linking the application together. 
+The `database` module initilises the database connection. 
+The `auth` module initilises the JWT auth and also has middleware for the routes based on user level (user, manager, admin etc.) 
+The `routes` module contains the routing logic. 
+The `services` module deals with all the business logic
