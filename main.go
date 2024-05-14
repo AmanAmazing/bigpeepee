@@ -43,7 +43,7 @@ func main() {
 	// Public unathenticated routes
 	r.Mount("/", routes.PublicRouter(db))
 	// Routes for User accounts
-	r.Mount("/user", routes.UserRouter())
+	r.Mount("/user", routes.UserRouter(db))
 	// Routes for Manager accounts
 	r.Mount("/manager", routes.ManagerRouter())
 

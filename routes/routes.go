@@ -92,13 +92,20 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 // Need a way to refresh the token so the user does not need to sign in again if they have signed in the previous 24 hours
 
 // UserRouter is for routes for all Users
-func UserRouter() http.Handler {
+func UserRouter(db *pgxpool.Pool) http.Handler {
+	// FIX: not the best way to serve static pages. I have to find a better way
+	formPage := template.Must(template.ParseFiles("components/poform.html"))
+	// userService := services.NewUserService(db)
 	r := chi.NewRouter()
 	r.Use(jwtauth.Verifier(auth.TokenAuth))
 	r.Use(auth.UserOnly)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello User"))
 	})
+	r.Get("/form", func(w http.ResponseWriter, r *http.Request) {
+		formPage.Execute(w, nil)
+	})
+
 	return r
 }
 

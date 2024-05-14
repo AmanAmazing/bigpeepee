@@ -1,0 +1,44 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PO Form</title>
+</head>
+
+<body>
+    <form method="POST" action="/submit">
+        <div class="form-group">
+            <label for="priority">Priority:</label>
+            <select id="priority" name="priority">
+                <option value="low"> low </option>
+                <option value="medium"> medium </option>
+                <option value="high"> high </option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="supplier">Supplier:</label>
+            <select id="supplier" name="supplier" hx-get="/user/suppliers" hx-trigger="load">
+                <option value="">Select a supplier</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="nominal">Nominal:</label>
+            <select id="nominal" name="nominal" hx-get="/user/nominals" hx-trigger="load">
+                <option value="">Select a nominal</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="product">Product:</label>
+            <select id="product" name="product" hx-get="/user/products" hx-trigger="load">
+                <option value="">Select a product</option>
+            </select>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+</html>

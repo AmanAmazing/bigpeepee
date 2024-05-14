@@ -37,7 +37,6 @@ func TestDB() {
 	('admin'),
 	('manager'),
 	('user');
-'$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a'
 	-- Insert test users
 	insert into users (email, username, password) values
 	('john@example.com', 'johndoe', '$2a$14$9gXg5n7LWwSjY/LeCdzKU.V1nFxdmebzgZfuz.h65JVE3bFBzEg6a'),
@@ -96,6 +95,29 @@ func TestDB() {
 	select
 	(select id from users where email = 'emily@example.com'),
 	(select id from departments where name = 'finance');
+
+	-- Insert test suppliers
+	insert into suppliers (name) values
+	('argos'),
+	('amazon'),
+	('zebra'),
+	('microsoft'),
+	('golak');
+	
+	-- Insert test nominals. not sure what that even means lol 
+	insert into nominals (name) values
+	('computer costs - gsit'),
+	('office - printer'),
+	('agency staff'),
+	('advertising');
+
+	-- Insert test products. 
+	insert into products (name) values
+	('desk appliances'),
+	('desktops'),
+	('printer - subscription'),
+	('office furniture');
+
 
 	COMMIT;
 	`

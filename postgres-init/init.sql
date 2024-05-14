@@ -57,4 +57,18 @@ CREATE TABLE purchase_order_approvals (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-------------  Currently working on --------------------
+CREATE TABLE suppliers ( 
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
 
+CREATE TABLE nominals (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
