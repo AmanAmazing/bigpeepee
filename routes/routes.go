@@ -95,7 +95,7 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 func UserRouter(db *pgxpool.Pool) http.Handler {
 	// FIX: not the best way to serve static pages. I have to find a better way
 	formPage := template.Must(template.ParseFiles("components/poform.html"))
-	// userService := services.NewUserService(db)
+	userService := services.NewUserService(db)
 	r := chi.NewRouter()
 	r.Use(jwtauth.Verifier(auth.TokenAuth))
 	r.Use(auth.UserOnly)
@@ -104,6 +104,43 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 	})
 	r.Get("/form", func(w http.ResponseWriter, r *http.Request) {
 		formPage.Execute(w, nil)
+	})
+
+	r.Get("/form/suppliers", func(w http.ResponseWriter, r *http.Request) {
+		suppliers, err := userService.GetSuppliers()
+		if err != nil {
+			println("error occurred fetching suppliers")
+		}
+		tmpl := template.Must(template.New("suppliers").Parse(`
+			{{range .}}
+				<option value="{{.ID}}">{{.Name}}</option>
+			{{end}}
+		`))
+		tmpl.Execute(w, suppliers)
+	})
+	r.Get("/form/nominals", func(w http.ResponseWriter, r *http.Request) {
+		nominals, err := userService.GetNominals()
+		if err != nil {
+			println("error occurred fetching nominals")
+		}
+		tmpl := template.Must(template.New("nominals").Parse(`
+			{{range .}}
+				<option value="{{.ID}}">{{.Name}}</option>
+			{{end}}
+		`))
+		tmpl.Execute(w, nominals)
+	})
+	r.Get("/form/products", func(w http.ResponseWriter, r *http.Request) {
+		products, err := userService.GetProducts()
+		if err != nil {
+			println("error occurred fetching products")
+		}
+		tmpl := template.Must(template.New("products").Parse(`
+			{{range .}}
+				<option value="{{.ID}}">{{.Name}}</option>
+			{{end}}
+		`))
+		tmpl.Execute(w, products)
 	})
 
 	return r

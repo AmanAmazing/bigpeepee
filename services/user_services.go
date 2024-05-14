@@ -107,3 +107,90 @@ func (s *UserService) Login(username, password string) (string, string, error) {
 	}
 	return tokenString, user.Role, nil
 }
+
+type Supplier struct {
+	ID   int
+	Name string
+}
+type Nominal struct {
+	ID   int
+	Name string
+}
+
+type Product struct {
+	ID   int
+	Name string
+}
+
+func (s *UserService) GetSuppliers() ([]Supplier, error) {
+	rows, err := s.db.Query(context.Background(), "SELECT id, name FROM suppliers")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var suppliers []Supplier
+	for rows.Next() {
+		var supplier Supplier
+		err := rows.Scan(&supplier.ID, &supplier.Name)
+		if err != nil {
+			return nil, err
+		}
+		suppliers = append(suppliers, supplier)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return suppliers, nil
+
+}
+
+func (s *UserService) GetNominals() ([]Nominal, error) {
+	rows, err := s.db.Query(context.Background(), "SELECT id, name FROM nominals")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var nominals []Nominal
+	for rows.Next() {
+		var nominal Nominal
+		err := rows.Scan(&nominal.ID, &nominal.Name)
+		if err != nil {
+			return nil, err
+		}
+		nominals = append(nominals, nominal)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return nominals, nil
+}
+
+func (s *UserService) GetProducts() ([]Product, error) {
+	rows, err := s.db.Query(context.Background(), "SELECT id, name FROM products")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var products []Product
+	for rows.Next() {
+		var product Product
+		err := rows.Scan(&product.ID, &product.Name)
+		if err != nil {
+			return nil, err
+		}
+		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
