@@ -4,11 +4,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"purchaseOrderSystem/auth"
 	"purchaseOrderSystem/database"
 	"purchaseOrderSystem/routes"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth"
 	"github.com/joho/godotenv"
 )
 
@@ -34,6 +36,8 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(jwtauth.Verifier(auth.TokenAuth))
+	r.Use(jwtauth.Authenticator)
 
 	// creating file server for static files
 	dir := http.Dir("./static")

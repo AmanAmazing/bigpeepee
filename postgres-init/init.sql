@@ -29,23 +29,28 @@ CREATE TABLE user_roles (
     PRIMARY KEY (user_id,role_id)
 );
 
+CREATE TYPE priority_level AS ENUM ('low','medium','high');
 CREATE TABLE purchase_orders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
     department_id INTEGER REFERENCES departments(id),
-    description TEXT NOT NULL,
-    status VARCHAR(20) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'Pending',
+    priority priority_level DEFAULT 'low',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE purchase_order_items (
     id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
     purchase_order_id INTEGER REFERENCES purchase_orders(id),
     item_name VARCHAR(255) NOT NULL,
     quantity INTEGER NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
-    total_price DECIMAL(10,2) NOT NULL
+    total_price DECIMAL(10,2) NOT NULL,
+    link VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE purchase_order_approvals (

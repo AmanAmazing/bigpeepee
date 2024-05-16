@@ -142,6 +142,45 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 		`))
 		tmpl.Execute(w, products)
 	})
+	r.Post("/form/submit", func(w http.ResponseWriter, r *http.Request) {
+		err := 
+		err := r.ParseForm()
+		if err != nil {
+			// Handle the error
+			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+			return
+		}
+
+		// Get the priority value
+		priority := r.PostForm.Get("priority")
+
+		// Get the item data
+		names := r.PostForm["name[]"]
+		suppliers := r.PostForm["supplier[]"]
+		nominals := r.PostForm["nominal[]"]
+		products := r.PostForm["product[]"]
+		unitPrices := r.PostForm["unit_price[]"]
+		quantities := r.PostForm["quantity[]"]
+		links := r.PostForm["link[]"]
+
+		// Process the form data
+		for i := 0; i < len(names); i++ {
+			name := names[i]
+			supplier := suppliers[i]
+			nominal := nominals[i]
+			product := products[i]
+			unitPrice := unitPrices[i]
+			quantity := quantities[i]
+			link := links[i]
+
+			// Perform further processing or store the data in the database
+			// ...
+		}
+
+		// Send a response
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Form submitted successfully"))
+	})
 
 	return r
 }
