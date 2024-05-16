@@ -195,5 +195,6 @@ func (s *UserService) GetProducts() ([]Product, error) {
 	return products, nil
 }
 
-func (s *UserService) ProcessLoginForm(username, password string) (string, string, error) {
-}
+// func (s *UserService) ProcessLoginForm(username, password string) (string, string, error) {
+//
+// }

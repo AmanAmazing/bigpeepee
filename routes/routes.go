@@ -9,7 +9,6 @@ import (
 	"text/template"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -93,12 +92,12 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 
 // UserRouter is for routes for all Users
 func UserRouter(db *pgxpool.Pool) http.Handler {
+	r := chi.NewRouter()
+	r.Use(auth.AuthMiddleware)
+	r.Use(auth.RoleMiddleware("user"))
 	// FIX: not the best way to serve static pages. I have to find a better way
 	formPage := template.Must(template.ParseFiles("components/poform.html"))
 	userService := services.NewUserService(db)
-	r := chi.NewRouter()
-	r.Use(jwtauth.Verifier(auth.TokenAuth))
-	r.Use(auth.UserOnly)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello User"))
 	})
@@ -142,45 +141,44 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 		`))
 		tmpl.Execute(w, products)
 	})
-	r.Post("/form/submit", func(w http.ResponseWriter, r *http.Request) {
-		err := 
-		err := r.ParseForm()
-		if err != nil {
-			// Handle the error
-			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
-			return
-		}
-
-		// Get the priority value
-		priority := r.PostForm.Get("priority")
-
-		// Get the item data
-		names := r.PostForm["name[]"]
-		suppliers := r.PostForm["supplier[]"]
-		nominals := r.PostForm["nominal[]"]
-		products := r.PostForm["product[]"]
-		unitPrices := r.PostForm["unit_price[]"]
-		quantities := r.PostForm["quantity[]"]
-		links := r.PostForm["link[]"]
-
-		// Process the form data
-		for i := 0; i < len(names); i++ {
-			name := names[i]
-			supplier := suppliers[i]
-			nominal := nominals[i]
-			product := products[i]
-			unitPrice := unitPrices[i]
-			quantity := quantities[i]
-			link := links[i]
-
-			// Perform further processing or store the data in the database
-			// ...
-		}
-
-		// Send a response
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Form submitted successfully"))
-	})
+	// r.Post("/form/submit", func(w http.ResponseWriter, r *http.Request) {
+	// 	err := r.ParseForm()
+	// 	if err != nil {
+	// 		// Handle the error
+	// 		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+	// 		return
+	// 	}
+	//
+	// 	// Get the priority value
+	// 	priority := r.PostForm.Get("priority")
+	//
+	// 	// Get the item data
+	// 	names := r.PostForm["name[]"]
+	// 	suppliers := r.PostForm["supplier[]"]
+	// 	nominals := r.PostForm["nominal[]"]
+	// 	products := r.PostForm["product[]"]
+	// 	unitPrices := r.PostForm["unit_price[]"]
+	// 	quantities := r.PostForm["quantity[]"]
+	// 	links := r.PostForm["link[]"]
+	//
+	// 	// Process the form data
+	// 	for i := 0; i < len(names); i++ {
+	// 		name := names[i]
+	// 		supplier := suppliers[i]
+	// 		nominal := nominals[i]
+	// 		product := products[i]
+	// 		unitPrice := unitPrices[i]
+	// 		quantity := quantities[i]
+	// 		link := links[i]
+	//
+	// 		// Perform further processing or store the data in the database
+	// 		// ...
+	// 	}
+	//
+	// 	// Send a response
+	// 	w.WriteHeader(http.StatusOK)
+	// 	w.Write([]byte("Form submitted successfully"))
+	// })
 
 	return r
 }
@@ -188,8 +186,9 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 // ManagerRouter is for routes for all managers
 func ManagerRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(jwtauth.Verifier(auth.TokenAuth))
-	r.Use(auth.ManagerOnly)
+	r.Use(auth.AuthMiddleware)
+	r.Use(auth.RoleMiddleware("manager"))
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello Manager"))
 	})
@@ -199,8 +198,8 @@ func ManagerRouter() http.Handler {
 // adminRouter is for routes for all admins
 func AdminRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(jwtauth.Verifier(auth.TokenAuth))
-	r.Use(auth.AdminOnly)
+	r.Use(auth.AuthMiddleware)
+	r.Use(auth.RoleMiddleware("admin"))
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello admin"))
 	})

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/jwtauth"
 	"github.com/golang-jwt/jwt"
@@ -19,9 +20,11 @@ func init() {
 	if err != nil {
 		log.Fatal("Error loading environment variables")
 	}
-
-	fmt.Println(os.Getenv("JWT_SECRET_KEY"))
-	TokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET_KEY")), nil)
+	secretKey := os.Getenv("JWT_SECRET_KEY")
+	if secretKey == "" {
+		log.Fatal("JWT_SECRET_KEY environment variable is not set")
+	}
+	TokenAuth = jwtauth.New("HS256", []byte(secretKey), nil)
 }
 
 func GenerateJWT(claims map[string]interface{}) (string, error) {
@@ -35,55 +38,69 @@ func GenerateJWT(claims map[string]interface{}) (string, error) {
 
 // TODO: Need to add checks for jwt token expiry :)
 
-func AdminOnly(next http.Handler) http.Handler {
+func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, claims, err := jwtauth.FromContext(r.Context())
+		println("AuthMiddleware: ")
+		token, claims, err := jwtauth.FromContext(r.Context())
+		println("here 1")
 		if err != nil {
+			println("here 2")
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
-
-		if claims["role"] != "admin" {
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		if token == nil {
+			println("here 3")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
+		exp, ok := claims["exp"].(float64)
+		if !ok {
+			println("here 4")
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+		if int64(exp) < time.Now().Unix() {
+			println("here 5")
+
+			http.Error(w, "Token has expired", http.StatusUnauthorized)
+			return
+		}
+		println("here 6")
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-func ManagerOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, claims, err := jwtauth.FromContext(r.Context())
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
+func RoleMiddleware(role string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, claims, err := jwtauth.FromContext(r.Context())
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				return
+			}
 
-		if claims["role"] != "manager" {
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-			return
-		}
+			userRole, ok := claims["role"].(string)
+			if !ok || userRole != role {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
-func UserOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Request Headers:", r.Header)
-		fmt.Println("Request Cookies:", r.Cookies())
-		_, claims, err := jwtauth.FromContext(r.Context())
-		if err != nil {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
+func ExtractUserID(r *http.Request) (string, error) {
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		return "", err
+	}
 
-		if claims["role"] != "user" {
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-			return
-		}
+	userID, ok := claims["userId"].(string)
+	if !ok {
+		return "", fmt.Errorf("user ID claim missing or invalid")
+	}
 
-		next.ServeHTTP(w, r)
-	})
+	return userID, nil
 }
