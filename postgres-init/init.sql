@@ -30,36 +30,39 @@ CREATE TABLE user_roles (
 );
 
 CREATE TYPE priority_level AS ENUM ('low','medium','high');
+CREATE TYPE purchase_order_approval AS ENUM ('rejected','pending','manager_approved','partial_approved','approved');
 CREATE TABLE purchase_orders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
     department_id INTEGER REFERENCES departments(id),
+    title VARCHAR(255),
     description TEXT,
-    status VARCHAR(20) DEFAULT 'Pending',
+    status purchase_order_approval DEFAULT 'pending',
     priority priority_level DEFAULT 'low',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
 );
 
+CREATE TYPE approval_status AS ENUM ('rejected','pending','improve','manager_approved','approved');
 CREATE TABLE purchase_order_items (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
     purchase_order_id INTEGER REFERENCES purchase_orders(id),
     item_name VARCHAR(255) NOT NULL,
     quantity INTEGER NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
     total_price DECIMAL(10,2) NOT NULL,
-    link VARCHAR(255) NOT NULL
+    link VARCHAR(255) NOT NULL,
+    status approval_status DEFAULT 'pending',
+    approver_id INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP
 );
 
-CREATE TABLE purchase_order_approvals (
-    id SERIAL PRIMARY KEY,
-    purchase_order_id INTEGER REFERENCES purchase_orders(id),
-    approver_id INTEGER REFERENCES users(id),
-    status VARCHAR(20) NOT NULL,
-    comments TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE purchase_order_approvers (
+    id SERIAL PRIMARY KEY, 
+    user_id INTEGER REFERENCES users(id)
 );
 
 -------------  Currently working on --------------------

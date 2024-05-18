@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/go-chi/jwtauth"
 	"github.com/golang-jwt/jwt"
@@ -50,21 +49,22 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 		if token == nil {
 			println("here 3")
+			println(token, claims, err)
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
-		exp, ok := claims["exp"].(float64)
-		if !ok {
-			println("here 4")
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-		if int64(exp) < time.Now().Unix() {
-			println("here 5")
-
-			http.Error(w, "Token has expired", http.StatusUnauthorized)
-			return
-		}
+		// exp, ok := claims["exp"].(float64)
+		// if !ok {
+		// 	println("here 4")
+		// 	http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		// 	return
+		// }
+		// if int64(exp) < time.Now().Unix() {
+		// 	println("here 5")
+		//
+		// 	http.Error(w, "Token has expired", http.StatusUnauthorized)
+		// 	return
+		// }
 		println("here 6")
 
 		next.ServeHTTP(w, r)

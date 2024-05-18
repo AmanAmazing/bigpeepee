@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -17,31 +18,17 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 	r := chi.NewRouter()
 	userService := services.NewUserService(db)
 	// FIX: not the best way to serve static pages. I have to find a better way
-	signupPage := template.Must(template.ParseFiles("public/signup.html"))
 	loginPage := template.Must(template.ParseFiles("public/login.html"))
+	homePage := template.Must(template.ParseFiles("public/home.html"))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		components.Hello("Aman").Render(context.Background(), w)
 	})
 
-	r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/home", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		signupPage.Execute(w, nil)
-	})
 
-	r.Post("/signup", func(w http.ResponseWriter, r *http.Request) {
-		email := r.FormValue("email")
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-
-		err := userService.Signup(email, username, password)
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		// FIX: Need to make sure that the user is correctly routed to the homepage of their respective role
-		return
 	})
 
 	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +80,7 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 // UserRouter is for routes for all Users
 func UserRouter(db *pgxpool.Pool) http.Handler {
 	r := chi.NewRouter()
+	r.Use(jwtauth.Verifier(auth.TokenAuth))
 	r.Use(auth.AuthMiddleware)
 	r.Use(auth.RoleMiddleware("user"))
 	// FIX: not the best way to serve static pages. I have to find a better way
@@ -141,44 +129,44 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 		`))
 		tmpl.Execute(w, products)
 	})
-	// r.Post("/form/submit", func(w http.ResponseWriter, r *http.Request) {
-	// 	err := r.ParseForm()
-	// 	if err != nil {
-	// 		// Handle the error
-	// 		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
-	// 		return
-	// 	}
-	//
-	// 	// Get the priority value
-	// 	priority := r.PostForm.Get("priority")
-	//
-	// 	// Get the item data
-	// 	names := r.PostForm["name[]"]
-	// 	suppliers := r.PostForm["supplier[]"]
-	// 	nominals := r.PostForm["nominal[]"]
-	// 	products := r.PostForm["product[]"]
-	// 	unitPrices := r.PostForm["unit_price[]"]
-	// 	quantities := r.PostForm["quantity[]"]
-	// 	links := r.PostForm["link[]"]
-	//
-	// 	// Process the form data
-	// 	for i := 0; i < len(names); i++ {
-	// 		name := names[i]
-	// 		supplier := suppliers[i]
-	// 		nominal := nominals[i]
-	// 		product := products[i]
-	// 		unitPrice := unitPrices[i]
-	// 		quantity := quantities[i]
-	// 		link := links[i]
-	//
-	// 		// Perform further processing or store the data in the database
-	// 		// ...
-	// 	}
-	//
-	// 	// Send a response
-	// 	w.WriteHeader(http.StatusOK)
-	// 	w.Write([]byte("Form submitted successfully"))
-	// })
+	r.Post("/form/submit", func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			// Handle the error
+			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+			return
+		}
+
+		// // Get the priority value
+		// priority := r.PostForm.Get("priority")
+		//
+		// // Get the item data
+		// names := r.PostForm["name[]"]
+		// suppliers := r.PostForm["supplier[]"]
+		// nominals := r.PostForm["nominal[]"]
+		// products := r.PostForm["product[]"]
+		// unitPrices := r.PostForm["unit_price[]"]
+		// quantities := r.PostForm["quantity[]"]
+		// links := r.PostForm["link[]"]
+		//
+		// // Process the form data
+		// for i := 0; i < len(names); i++ {
+		// 	name := names[i]
+		// 	supplier := suppliers[i]
+		// 	nominal := nominals[i]
+		// 	product := products[i]
+		// 	unitPrice := unitPrices[i]
+		// 	quantity := quantities[i]
+		// 	link := links[i]
+		//
+		// 	// Perform further processing or store the data in the database
+		// 	// ...
+		// }
+		//
+		// Send a response
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Form submitted successfully"))
+	})
 
 	return r
 }
@@ -186,6 +174,7 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 // ManagerRouter is for routes for all managers
 func ManagerRouter() http.Handler {
 	r := chi.NewRouter()
+	r.Use(jwtauth.Verifier(auth.TokenAuth))
 	r.Use(auth.AuthMiddleware)
 	r.Use(auth.RoleMiddleware("manager"))
 
@@ -198,6 +187,7 @@ func ManagerRouter() http.Handler {
 // adminRouter is for routes for all admins
 func AdminRouter() http.Handler {
 	r := chi.NewRouter()
+	r.Use(jwtauth.Verifier(auth.TokenAuth))
 	r.Use(auth.AuthMiddleware)
 	r.Use(auth.RoleMiddleware("admin"))
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
