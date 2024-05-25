@@ -9,6 +9,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/crypto v0.23.0
 )
 
 require (
@@ -22,7 +23,6 @@ require (
 	github.com/lestrrat-go/jwx v1.1.0 // indirect
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 )

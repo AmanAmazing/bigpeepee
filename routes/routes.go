@@ -19,16 +19,15 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 	userService := services.NewUserService(db)
 	// FIX: not the best way to serve static pages. I have to find a better way
 	loginPage := template.Must(template.ParseFiles("public/login.html"))
-	homePage := template.Must(template.ParseFiles("public/home.html"))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		components.Hello("Aman").Render(context.Background(), w)
+		components.Hello("aman").Render(context.Background(), w)
 	})
 
 	r.Get("/home", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-
+		components.Hello("Something").Render(context.Background(), w)
 	})
 
 	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
