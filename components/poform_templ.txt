@@ -1,0 +1,27 @@
+<div class=\"container\"><form method=\"POST\" action=\"/user/form/submit\"><div class=\"form-floating mb-3\"><input class=\"form-control\" type=\"text\" id=\"title\" name=\"title\" required> <label for=\"title\">Title</label></div><div class=\"form-floating mb-3\"><textarea class=\"form-control\" rows=\"3\" id=\"description\" name=\"description\" required></textarea> <label for=\"description\">description</label></div><div class=\"form-floating mb-3\"><select class=\"form-select\" id=\"priority\" name=\"priority\"><option value=\"low\">Low</option> <option value=\"medium\">Medium</option> <option value=\"high\">High</option></select> <label for=\"priority\">Priority</label></div><div id=\"items-container\">
+</div><button type=\"button\" id=\"add-item\" hx-get=\"/user/form/item\" hx-trigger=\"click\" hx-target=\"#items-container\" hx-swap=\"beforeend\" hx-include=\"#item-count-input\" class=\"btn btn-secondary\">Add Item</button> <input type=\"hidden\" id=\"item-count-input\" name=\"item_count\" value=\"1\"> <button class=\"btn btn-primary\" type=\"submit\">Submit</button></form></div>
+<div class=\"item\"><div class=\"form-floating\"><input class=\"form-control\" type=\"text\" id=\"
+\" name=\"
+\" required> <label for=\"
+\">name</label></div><div class=\"form-floating\"><select class=\"form-select\" id=\"
+\" name=\"
+\" hx-get=\"/user/form/suppliers\" hx-trigger=\"load\"><option value=\"\">Select a supplier</option></select> <label for=\"
+\">Supplier</label></div><div class=\"form-floating\"><select class=\"form-select\" id=\"
+\" name=\"
+\" hx-get=\"/user/form/nominals\" hx-trigger=\"load\"><option value=\"\">Select a nominal</option></select> <label for=\"
+\">Nominal</label></div><div class=\"form-floating\"><select class=\"form-select\" id=\"
+\" name=\"
+\" hx-get=\"/user/form/products\" hx-trigger=\"load\"><option value=\"\">Select a product</option></select> <label for=\"
+\">Product</label></div><div class=\"form-floating\"><input class=\"form-control\" type=\"number\" id=\"
+\" name=\"
+\" step=\"0.01\" required> <label class=\"form-label\" for=\"
+\">Unit Price</label></div><div class=\"form-floating\"><input class=\"form-control\" type=\"number\" id=\"
+\" name=\"
+\" required> <label for=\"
+\">Quantity</label></div><div class=\"form-floating\"><input class=\"form-control\" type=\"url\" id=\"
+\" name=\"
+\" required> <label for=\"
+\">link</label></div></div>
+<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>PO Form</title><script src=\"https://unpkg.com/htmx.org@1.9.12\" integrity=\"sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2\" crossorigin=\"anonymous\"></script><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH\" crossorigin=\"anonymous\"></head><body>
+<h1>Create New Purchase Order form</h1>
+<script>\n\t\tdocument.body.addEventListener('updateItemCountEvent', function (evt) {\n\t\t\tvar currentCount = parseInt(document.getElementById('item-count-input').value);\n\t\t\tdocument.getElementById('item-count-input').value = currentCount + 1;\n\t\t});\n\n\t</script><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz\" crossorigin=\"anonymous\"></script></body></html>

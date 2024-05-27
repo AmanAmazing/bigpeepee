@@ -6,6 +6,7 @@ import (
 	"purchaseOrderSystem/auth"
 	"purchaseOrderSystem/components"
 	"purchaseOrderSystem/services"
+	"strconv"
 	"text/template"
 
 	"github.com/go-chi/chi/v5"
@@ -22,7 +23,7 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		components.Hello("aman").Render(context.Background(), w)
+		components.Hello("Aman").Render(context.Background(), w)
 	})
 
 	r.Get("/home", func(w http.ResponseWriter, r *http.Request) {
@@ -83,13 +84,14 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 	r.Use(auth.AuthMiddleware)
 	r.Use(auth.RoleMiddleware("user"))
 	// FIX: not the best way to serve static pages. I have to find a better way
-	formPage := template.Must(template.ParseFiles("components/poform.html"))
+	// formPage := template.Must(template.ParseFiles("components/poform.html"))
 	userService := services.NewUserService(db)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello User"))
 	})
 	r.Get("/form", func(w http.ResponseWriter, r *http.Request) {
-		formPage.Execute(w, nil)
+		// formPage.Execute(w, nil)
+		components.Form().Render(context.Background(), w)
 	})
 
 	r.Get("/form/suppliers", func(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +130,19 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 		`))
 		tmpl.Execute(w, products)
 	})
+	r.Get("/form/item", func(w http.ResponseWriter, r *http.Request) {
+		// TODO: Need to verify the item_count
+		item_count_string := r.URL.Query().Get("item_count")
+		item_count, err := strconv.Atoi(item_count_string)
+		item_count += 1
+		if err != nil {
+			// TODO: Need to return error
+			return
+		}
+		w.Header().Add("HX-Trigger", "updateItemCountEvet")
+		w.Header().Add("HX-Trigger-After-Swap", "updateItemCountEvent")
+		components.FormItem(item_count).Render(context.Background(), w)
+	})
 	r.Post("/form/submit", func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
@@ -135,37 +150,38 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
 			return
 		}
+		item_count, err := strconv.Atoi(r.FormValue("item_count"))
+		if err != nil {
+			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+			return
+		}
+		priority := r.FormValue("priority")
 
-		// // Get the priority value
-		// priority := r.PostForm.Get("priority")
-		//
-		// // Get the item data
-		// names := r.PostForm["name[]"]
-		// suppliers := r.PostForm["supplier[]"]
-		// nominals := r.PostForm["nominal[]"]
-		// products := r.PostForm["product[]"]
-		// unitPrices := r.PostForm["unit_price[]"]
-		// quantities := r.PostForm["quantity[]"]
-		// links := r.PostForm["link[]"]
-		//
-		// // Process the form data
-		// for i := 0; i < len(names); i++ {
-		// 	name := names[i]
-		// 	supplier := suppliers[i]
-		// 	nominal := nominals[i]
-		// 	product := products[i]
-		// 	unitPrice := unitPrices[i]
-		// 	quantity := quantities[i]
-		// 	link := links[i]
-		//
-		// 	// Perform further processing or store the data in the database
-		// 	// ...
-		// }
-		//
-		// Send a response
+		_, claims, err := jwtauth.FromContext(r.Context())
+		if err != nil {
+			http.Error(w, "Failed to gather ID and department ID in the /user/form/submit post path", http.StatusUnauthorized)
+			return
+		}
+		// FIX: need to verify department and userId is there
+		user_id := int(claims["userId"].(float64))
+		department := claims["department"].(string)
+		err = userService.SubmitPurchaseOrder(user_id, department, priority, item_count, r.Form)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Form submitted successfully"))
 	})
+
+	r.Get("/repo", func(w http.ResponseWriter, r *http.Request) {
+		components.Repo().Render(context.Background(), w)
+		return
+	})
+	// r.Get("/po/{id}", func(w http.ResponseWriter, r *http.Request) {
+	// 	requestedPoId := chi.URLParam(r, "id")
+	// 	po, err := userService.GetPurchaseOrderId(requestedPoId)
+	// })
 
 	return r
 }

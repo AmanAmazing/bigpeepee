@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"purchaseOrderSystem/auth"
 	"purchaseOrderSystem/models"
 	"purchaseOrderSystem/utils"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -193,6 +195,67 @@ func (s *UserService) GetProducts() ([]Product, error) {
 	}
 
 	return products, nil
+}
+
+func (s *UserService) SubmitPurchaseOrder(userID int, department, priority string, item_count int, formData url.Values) error {
+	tx, err := s.db.Begin(context.Background())
+	if err != nil {
+		return fmt.Errorf("Failed to start a transaction: %v", err)
+	}
+	defer tx.Rollback(context.Background())
+
+	var departmentID int
+	err = tx.QueryRow(context.Background(), `
+		SELECT id FROM departments WHERE name = $1
+	`, department).Scan(&departmentID)
+	if err != nil {
+		return fmt.Errorf("failed to get department ID: %v", err)
+	}
+
+	title := formData.Get("title")
+	description := formData.Get("description")
+
+	var purchaseOrderID int
+	err = tx.QueryRow(context.Background(), `
+		INSERT INTO purchase_orders (user_id, department_id,title,description,priority) 
+		VALUES ($1,$2,$3,$4,$5) 
+		RETURNING id`, userID, departmentID, title, description, priority).Scan(&purchaseOrderID)
+	if err != nil {
+		return fmt.Errorf("failed to insert purchase order 1: %v", err)
+	}
+
+	for i := 1; i <= item_count; i++ {
+		itemName := formData.Get(fmt.Sprintf("name%d", i))
+		supplier := formData.Get(fmt.Sprintf("supplier%d", i))
+		nominal := formData.Get(fmt.Sprintf("nominal%d", i))
+		product := formData.Get(fmt.Sprintf("product%d", i))
+		unitPriceStr := formData.Get(fmt.Sprintf("unit_price%d", i))
+		quantityStr := formData.Get(fmt.Sprintf("quantity%d", i))
+		link := formData.Get(fmt.Sprintf("link%d", i))
+
+		unitPrice, err := strconv.ParseFloat(unitPriceStr, 64)
+		if err != nil {
+			return fmt.Errorf("Invalid unit price for item %d: %v", i, err)
+		}
+		quantity, err := strconv.Atoi(quantityStr)
+		if err != nil {
+			return fmt.Errorf("Invalid quantity for item %d: %v", i, err)
+		}
+		totalPrice := unitPrice * float64(quantity)
+
+		_, err = tx.Exec(context.Background(), `
+			INSERT INTO purchase_order_items (purchase_order_id,item_name,supplier,nominal,product,unit_price,quantity,total_price,link)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+			`, purchaseOrderID, itemName, supplier, nominal, product, unitPrice, quantity, totalPrice, link)
+		if err != nil {
+			return fmt.Errorf("failed to insert purchase order 2 item: %v", err)
+		}
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+	return nil
 }
 
 // func (s *UserService) ProcessLoginForm(username, password string) (string, string, error) {

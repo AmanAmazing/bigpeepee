@@ -207,15 +207,15 @@ select
 'high';
 
 -- Insert purchase order items for the above purchase orders
-insert into purchase_order_items (purchase_order_id, item_name, quantity, unit_price, total_price, link, status)
+insert into purchase_order_items (purchase_order_id, item_name, supplier,nominal,product,quantity, unit_price, total_price, link, status)
 values
-((select id from purchase_orders where title = 'Pending PO 1'), 'Item 1', 10, 50.00, 500.00, 'https://example.com/item1', 'pending'),
-((select id from purchase_orders where title = 'Pending PO 1'), 'Item 2', 5, 100.00, 500.00, 'https://example.com/item2', 'pending'),
-((select id from purchase_orders where title = 'Manager Approved PO 1'), 'Item 3', 8, 75.00, 600.00, 'https://example.com/item3', 'manager_approved'),
-((select id from purchase_orders where title = 'Manager Approved PO 1'), 'Item 4', 3, 200.00, 600.00, 'https://example.com/item4', 'manager_approved'),
-((select id from purchase_orders where title = 'Partially Approved PO 1'), 'Item 5', 12, 30.00, 360.00, 'https://example.com/item5', 'approved'),
-((select id from purchase_orders where title = 'Partially Approved PO 1'), 'Item 6', 6, 80.00, 480.00, 'https://example.com/item6', 'pending'),
-((select id from purchase_orders where title = 'Fully Approved PO 1'), 'Item 7', 20, 25.00, 500.00, 'https://example.com/item7', 'approved'),
-((select id from purchase_orders where title = 'Fully Approved PO 1'), 'Item 8', 10, 120.00, 1200.00, 'https://example.com/item8', 'approved');
+((select id from purchase_orders where title = 'Pending PO 1'), 'Item 1','argos', 'office - printer','desktops',10, 50.00, 500.00, 'https://example.com/item1', 'pending'),
+((select id from purchase_orders where title = 'Pending PO 1'), 'Item 2', 'zebra','office - printer','office furniture',5, 100.00, 500.00, 'https://example.com/item2', 'pending'),
+((select id from purchase_orders where title = 'Manager Approved PO 1'), 'Item 3','amazon','office - printer','office furniture',8, 75.00, 600.00, 'https://example.com/item3', 'manager_approved'),
+((select id from purchase_orders where title = 'Manager Approved PO 1'), 'Item 4', 'argos','advertising','desktops',3, 200.00, 600.00, 'https://example.com/item4', 'manager_approved'),
+((select id from purchase_orders where title = 'Partially Approved PO 1'), 'Item 5','argos','office - printer','desktops',12, 30.00, 360.00, 'https://example.com/item5', 'approved'),
+((select id from purchase_orders where title = 'Partially Approved PO 1'), 'Item 6', 'zebra','advertising','office furniture',6, 80.00, 480.00, 'https://example.com/item6', 'pending'),
+((select id from purchase_orders where title = 'Fully Approved PO 1'), 'Item 7', 'amazon','office - printer','office furniture',20, 25.00, 500.00, 'https://example.com/item7', 'approved'),
+((select id from purchase_orders where title = 'Fully Approved PO 1'), 'Item 8','amazon','advertising','desktops',10, 120.00, 1200.00, 'https://example.com/item8', 'approved');
 
 COMMIT;
