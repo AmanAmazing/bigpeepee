@@ -110,30 +110,16 @@ func (s *UserService) Login(username, password string) (string, string, error) {
 	return tokenString, user.Role, nil
 }
 
-type Supplier struct {
-	ID   int
-	Name string
-}
-type Nominal struct {
-	ID   int
-	Name string
-}
-
-type Product struct {
-	ID   int
-	Name string
-}
-
-func (s *UserService) GetSuppliers() ([]Supplier, error) {
+func (s *UserService) GetSuppliers() ([]models.Supplier, error) {
 	rows, err := s.db.Query(context.Background(), "SELECT id, name FROM suppliers")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var suppliers []Supplier
+	var suppliers []models.Supplier
 	for rows.Next() {
-		var supplier Supplier
+		var supplier models.Supplier
 		err := rows.Scan(&supplier.ID, &supplier.Name)
 		if err != nil {
 			return nil, err
@@ -149,16 +135,16 @@ func (s *UserService) GetSuppliers() ([]Supplier, error) {
 
 }
 
-func (s *UserService) GetNominals() ([]Nominal, error) {
+func (s *UserService) GetNominals() ([]models.Nominal, error) {
 	rows, err := s.db.Query(context.Background(), "SELECT id, name FROM nominals")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var nominals []Nominal
+	var nominals []models.Nominal
 	for rows.Next() {
-		var nominal Nominal
+		var nominal models.Nominal
 		err := rows.Scan(&nominal.ID, &nominal.Name)
 		if err != nil {
 			return nil, err
@@ -173,16 +159,16 @@ func (s *UserService) GetNominals() ([]Nominal, error) {
 	return nominals, nil
 }
 
-func (s *UserService) GetProducts() ([]Product, error) {
+func (s *UserService) GetProducts() ([]models.Product, error) {
 	rows, err := s.db.Query(context.Background(), "SELECT id, name FROM products")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var products []Product
+	var products []models.Product
 	for rows.Next() {
-		var product Product
+		var product models.Product
 		err := rows.Scan(&product.ID, &product.Name)
 		if err != nil {
 			return nil, err
@@ -197,7 +183,7 @@ func (s *UserService) GetProducts() ([]Product, error) {
 	return products, nil
 }
 
-func (s *UserService) SubmitPurchaseOrder(userID int, department, priority string, item_count int, formData url.Values) error {
+func (s *UserService) SubmitPurchaseOrder(userID int, department, priority, role string, item_count int, formData url.Values) error {
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
 		return fmt.Errorf("Failed to start a transaction: %v", err)
@@ -243,10 +229,21 @@ func (s *UserService) SubmitPurchaseOrder(userID int, department, priority strin
 		}
 		totalPrice := unitPrice * float64(quantity)
 
+		var status string
+
+		switch role {
+		case "user":
+			status = "pending"
+		case "manager":
+			status = "manager_approved"
+		case "admin": // TODO: Not really sure I should let admin users submit POs might cancell this later on
+			status = "pending"
+		}
+
 		_, err = tx.Exec(context.Background(), `
-			INSERT INTO purchase_order_items (purchase_order_id,item_name,supplier,nominal,product,unit_price,quantity,total_price,link)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-			`, purchaseOrderID, itemName, supplier, nominal, product, unitPrice, quantity, totalPrice, link)
+			INSERT INTO purchase_order_items (purchase_order_id,item_name,supplier,nominal,product,unit_price,quantity,total_price,link, status)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+			`, purchaseOrderID, itemName, supplier, nominal, product, unitPrice, quantity, totalPrice, link, status)
 		if err != nil {
 			return fmt.Errorf("failed to insert purchase order 2 item: %v", err)
 		}

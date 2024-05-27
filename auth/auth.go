@@ -91,6 +91,31 @@ func RoleMiddleware(role string) func(http.Handler) http.Handler {
 	}
 }
 
+func UserMiddlerware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, claims, err := jwtauth.FromContext(r.Context())
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+				return
+			}
+			userRole, ok := claims["role"].(string)
+			if !ok {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return
+			}
+			if userRole == "user" || userRole == "manager" || userRole == "admin" {
+				next.ServeHTTP(w, r)
+				return
+			} else {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return
+
+			}
+		})
+	}
+}
+
 func ExtractUserID(r *http.Request) (string, error) {
 	_, claims, err := jwtauth.FromContext(r.Context())
 	if err != nil {
@@ -98,6 +123,19 @@ func ExtractUserID(r *http.Request) (string, error) {
 	}
 
 	userID, ok := claims["userId"].(string)
+	if !ok {
+		return "", fmt.Errorf("user ID claim missing or invalid")
+	}
+
+	return userID, nil
+}
+func ExtractUserRole(r *http.Request) (string, error) {
+	_, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil {
+		return "", err
+	}
+
+	userID, ok := claims["role"].(string)
 	if !ok {
 		return "", fmt.Errorf("user ID claim missing or invalid")
 	}

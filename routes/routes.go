@@ -63,7 +63,7 @@ func PublicRouter(db *pgxpool.Pool) http.Handler {
 		case "admin":
 			http.Redirect(w, r, "/admin", http.StatusFound)
 		case "manager":
-			http.Redirect(w, r, "/manager", http.StatusFound)
+			http.Redirect(w, r, "/user", http.StatusFound)
 		case "user":
 			http.Redirect(w, r, "/user", http.StatusFound)
 		default:
@@ -82,7 +82,7 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 	r := chi.NewRouter()
 	r.Use(jwtauth.Verifier(auth.TokenAuth))
 	r.Use(auth.AuthMiddleware)
-	r.Use(auth.RoleMiddleware("user"))
+	r.Use(auth.UserMiddlerware())
 	// FIX: not the best way to serve static pages. I have to find a better way
 	// formPage := template.Must(template.ParseFiles("components/poform.html"))
 	userService := services.NewUserService(db)
@@ -165,7 +165,8 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 		// FIX: need to verify department and userId is there
 		user_id := int(claims["userId"].(float64))
 		department := claims["department"].(string)
-		err = userService.SubmitPurchaseOrder(user_id, department, priority, item_count, r.Form)
+		role := claims["role"].(string)
+		err = userService.SubmitPurchaseOrder(user_id, department, priority, role, item_count, r.Form)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -183,19 +184,6 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 	// 	po, err := userService.GetPurchaseOrderId(requestedPoId)
 	// })
 
-	return r
-}
-
-// ManagerRouter is for routes for all managers
-func ManagerRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Use(jwtauth.Verifier(auth.TokenAuth))
-	r.Use(auth.AuthMiddleware)
-	r.Use(auth.RoleMiddleware("manager"))
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello Manager"))
-	})
 	return r
 }
 

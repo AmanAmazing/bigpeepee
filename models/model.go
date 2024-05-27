@@ -8,6 +8,19 @@ type User struct {
 	Role       string `json:"role"`
 	Department string `json:"department"`
 }
+type Supplier struct {
+	ID   int
+	Name string
+}
+type Nominal struct {
+	ID   int
+	Name string
+}
+
+type Product struct {
+	ID   int
+	Name string
+}
 
 // type FormItem struct {
 // 	Name      string  `form:"name"`

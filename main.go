@@ -44,8 +44,6 @@ func main() {
 	r.Mount("/", routes.PublicRouter(db))
 	// Routes for User accounts
 	r.Mount("/user", routes.UserRouter(db))
-	// Routes for Manager accounts
-	r.Mount("/manager", routes.ManagerRouter())
 
 	// Routes for admin accounts
 	r.Mount("/admin", routes.AdminRouter())
