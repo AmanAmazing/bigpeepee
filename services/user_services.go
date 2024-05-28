@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -12,6 +13,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -253,6 +255,121 @@ func (s *UserService) SubmitPurchaseOrder(userID int, department, priority, role
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 	return nil
+}
+
+// type FormItem struct {
+// Queries the database for all purchase orders created by the supplied userId
+func (s *UserService) GetPurchaseOrdersByUserID(userId int) ([]models.PurchaseOrder, error) {
+	query := fmt.Sprintf("SELECT * FROM purchase_orders WHERE user_id=%v LIMIT 10", userId)
+	fmt.Println("Query is: ", query)
+
+	rows, err := s.db.Query(context.Background(), query)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to query for purchase orders: %w", err)
+	}
+	defer rows.Close()
+
+	var purchaseOrders []models.PurchaseOrder
+	for rows.Next() {
+		po := models.PurchaseOrder{}
+		err := rows.Scan(&po.ID, &po.UserID, &po.DepartmentID, &po.Title, &po.Description, &po.Status, &po.Priority, &po.CreatedAt, &po.UpdatedAt, &po.DeletedAt)
+		if err != nil {
+			return nil, fmt.Errorf("unable to scan row: %w", err)
+		}
+		purchaseOrders = append(purchaseOrders, po)
+	}
+	fmt.Println(len(purchaseOrders))
+	return purchaseOrders, nil
+}
+func (s *UserService) GetPurchaseOrderById(userID int, poID string) (map[models.PurchaseOrder][]models.PurchaseOrderItem, error) {
+	purchaseOrder := make(map[models.PurchaseOrder][]models.PurchaseOrderItem)
+
+	// Start a transaction
+	tx, err := s.db.Begin(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error starting transaction: %v", err)
+	}
+	defer func() { // Rollback if anything goes wrong
+		if err != nil {
+			tx.Rollback(context.Background())
+		}
+	}()
+
+	// 1. Retrieve the purchase order
+	poQuery := `
+        SELECT id, user_id, department_id, title, description, status, priority, created_at, updated_at
+        FROM purchase_orders
+        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+    `
+	var po models.PurchaseOrder
+	err = tx.QueryRow(context.Background(), poQuery, poID, userID).Scan(
+		&po.ID, &po.UserID, &po.DepartmentID, &po.Title, &po.Description, &po.Status, &po.Priority, &po.CreatedAt, &po.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, errors.New("purchase order not found for this user")
+		}
+		return nil, fmt.Errorf("error fetching purchase order: %v", err)
+	}
+
+	// 2. Retrieve the associated purchase order items
+	itemsQuery := `
+        SELECT id, purchase_order_id, item_name, supplier, nominal, product, quantity, unit_price, total_price, link, status, approver_id, created_at, updated_at
+        FROM purchase_order_items
+        WHERE purchase_order_id = $1 AND deleted_at IS NULL
+    `
+	rows, err := tx.Query(context.Background(), itemsQuery, poID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching purchase order items: %v", err)
+	}
+	defer rows.Close()
+
+	var items []models.PurchaseOrderItem
+	for rows.Next() {
+		var item models.PurchaseOrderItem
+		err := rows.Scan(
+			&item.ID, &item.PurchaseOrderID, &item.ItemName, &item.Supplier, &item.Nominal, &item.Product, &item.Quantity, &item.UnitPrice, &item.TotalPrice, &item.Link, &item.Status, &item.ApproverID, &item.CreatedAt, &item.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning purchase order item: %v", err)
+		}
+		items = append(items, item)
+	}
+
+	// Check for errors during row iteration
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating purchase order items: %v", err)
+	}
+
+	// Commit the transaction
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("error committing transaction: %v", err)
+	}
+
+	// Add the purchase order and its items to the result map
+	purchaseOrder[po] = items
+	return purchaseOrder, nil
+}
+
+func (s *UserService) GetPurchaseOrderByIdWithoutItems(poID string) (models.PurchaseOrder, error) {
+	po := models.PurchaseOrder{}
+
+	// 1. Retrieve the purchase order
+	poQuery := `
+        SELECT id, user_id, department_id, title, description, status, priority, created_at, updated_at
+        FROM purchase_orders
+        WHERE id = $1
+    `
+	err := s.db.QueryRow(context.Background(), poQuery, poID).Scan(
+		&po.ID, &po.UserID, &po.DepartmentID, &po.Title, &po.Description, &po.Status, &po.Priority, &po.CreatedAt, &po.UpdatedAt,
+	)
+	if err != nil {
+		return po, fmt.Errorf("error fetching purchase order: %v", err)
+	}
+
+	// Add the purchase order and its items to the result map
+	return po, nil
 }
 
 // func (s *UserService) ProcessLoginForm(username, password string) (string, string, error) {

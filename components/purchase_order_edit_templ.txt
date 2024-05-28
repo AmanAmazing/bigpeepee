@@ -1,0 +1,5 @@
+<form hx-put=\"
+\" hx-push-url=\"true\" hx-target=\"body\"><div class=\"form-floating mb-3\"><input class=\"form-control\" type=\"text\" id=\"title\" name=\"title\" value=\"
+\" required> <label for=\"title\">Title</label></div><div class=\"form-floating mb-3\"><textarea class=\"form-control\" rows=\"3\" id=\"description\" name=\"description\" value=\"
+\" required></textarea> <label for=\"description\">description</label></div><div class=\"form-floating mb-3\"><select class=\"form-select\" id=\"priority\" name=\"priority\"><option value=\"low\">Low</option> <option value=\"medium\">Medium</option> <option value=\"high\">High</option></select> <label for=\"priority\">Priority</label></div><button class=\"btn\">Submit</button> <button class=\"btn\" hx-get=\"
+\">Cancel </button></form>

@@ -1,0 +1,33 @@
+package components
+
+import (
+"fmt"
+"purchaseOrderSystem/models"
+)
+
+// TODO: Need to not replace the entire body on cancellation of edit. Seems like a waste especially with
+// Purchase orders that have a lot of items. That is a very big re-render. Also if the user was editing the
+// items, that would also be lost. :(
+templ EditPurchaseOrder(po models.PurchaseOrder) {
+<form hx-put={ fmt.Sprintf("/po/%v/edit", po.ID) } hx-push-url="true" hx-target="body">
+	<div class="form-floating mb-3">
+		<input class="form-control" type="text" id="title" name="title" value={ po.Title } required />
+		<label for="title">Title</label>
+	</div>
+	<div class="form-floating mb-3">
+		<textarea class="form-control" rows="3" id="description" name="description" value={ po.Description }
+			required></textarea>
+		<label for="description">description</label>
+	</div>
+	<div class="form-floating mb-3">
+		<select class="form-select" id="priority" name="priority">
+			<option value="low">Low</option>
+			<option value="medium">Medium</option>
+			<option value="high">High</option>
+		</select>
+		<label for="priority">Priority</label>
+	</div>
+	<button class="btn">Submit</button>
+	<button class="btn" hx-get={ fmt.Sprintf("/user/po/%v", po.ID) }>Cancel </button>
+</form>
+}

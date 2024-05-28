@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type User struct {
 	ID         int    `json:"id"`
 	Username   string `json:"username"`
@@ -20,6 +22,37 @@ type Nominal struct {
 type Product struct {
 	ID   int
 	Name string
+}
+
+type PurchaseOrder struct {
+	ID           int
+	UserID       int
+	DepartmentID int
+	Title        string
+	Description  string
+	Status       string
+	Priority     string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time
+}
+
+type PurchaseOrderItem struct {
+	ID              int
+	PurchaseOrderID int
+	ItemName        string
+	Supplier        string
+	Nominal         string
+	Product         string
+	Quantity        int
+	UnitPrice       float64
+	TotalPrice      float64
+	Link            string
+	Status          string
+	ApproverID      *int
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       *time.Time
 }
 
 // type FormItem struct {

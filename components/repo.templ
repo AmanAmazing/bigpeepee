@@ -1,6 +1,47 @@
 package components
 
-templ Repo() {
+import (
+	"purchaseOrderSystem/models"
+	"fmt"
+)
+
+templ UserLatestPOs(pos []models.PurchaseOrder) {
+	<div>
+		<table class="table table-striped table-hover">
+			<thead>
+				<tr>
+					<th>title</th>
+					<th>description</th>
+					<th>priority</th>
+					<th>status</th>
+				</tr>
+			</thead>
+			<tbody class="table-group-divider">
+				for _,po := range pos {
+					<tr>
+						<td>{ po.Title } </td>
+						<td>{ po.Description } </td>
+						<td if po.Priority=="high" {
+	class="table-danger"
+}>{ po.Priority } </td>
+						<td>{ po.Status } </td>
+						<td>
+							<button
+								class="btn btn-info"
+								hx-push-url="true"
+								hx-target="body"
+								hx-get={ fmt.Sprintf("/user/po/%v",
+						po.ID) }
+							>Edit</button>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ Repo(pos []models.PurchaseOrder) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -17,7 +58,10 @@ templ Repo() {
 		</head>
 		<body>
 			@Navbar()
-			<h1>All Purchase Orders</h1>
+			<h1 class="text-center">All Purchase Orders</h1>
+			<br/>
+			<h2>Latest Purchase Orders </h2>
+			@UserLatestPOs(pos)
 			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 		</body>
 	</html>
