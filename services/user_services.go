@@ -372,6 +372,22 @@ func (s *UserService) GetPurchaseOrderByIdWithoutItems(poID string) (models.Purc
 	return po, nil
 }
 
+// returns empty struct with error if it occurs
+func (s *UserService) PutPurchaseOrder(formData models.PurchaseOrder) (models.PurchaseOrder, error) {
+
+	statement := `UPDATE purchase_orders
+				  SET title = $1, description = $2, priority = $3, 
+				  updated_at = NOW()
+				  WHERE id = $4
+		`
+	_, err := s.db.Exec(context.Background(), statement, formData.Title, formData.Description, formData.Priority, formData.ID)
+	if err != nil {
+		return models.PurchaseOrder{}, err
+	}
+	// check if the form data is the same
+	return formData, err
+}
+
 // func (s *UserService) ProcessLoginForm(username, password string) (string, string, error) {
 //
 // }

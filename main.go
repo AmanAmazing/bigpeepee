@@ -56,6 +56,5 @@ func main() {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte("method is not valid"))
 	})
-
 	http.ListenAndServe(os.Getenv("PORT"), r)
 }

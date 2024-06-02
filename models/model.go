@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"reflect"
+	"time"
+)
 
 type User struct {
 	ID         int    `json:"id"`
@@ -35,6 +38,13 @@ type PurchaseOrder struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time
+}
+
+func (po PurchaseOrder) IsEmpty() bool {
+	if reflect.DeepEqual(po, PurchaseOrder{}) {
+		return true
+	}
+	return false
 }
 
 type PurchaseOrderItem struct {

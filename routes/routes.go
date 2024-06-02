@@ -2,9 +2,11 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"purchaseOrderSystem/auth"
 	"purchaseOrderSystem/components"
+	"purchaseOrderSystem/models"
 	"purchaseOrderSystem/services"
 	"strconv"
 	"text/template"
@@ -241,16 +243,48 @@ func UserRouter(db *pgxpool.Pool) http.Handler {
 
 	})
 
-	// // posts the edited form. Need to edit the business logic for this.
-	// r.Put("/po/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
-	// 	requestedPoId := chi.URLParam(r, "id")
-	// 	if requestedPoId == "" {
-	// 		// FIX: Need better error responses
-	// 		w.WriteHeader(http.StatusInternalServerError)
-	// 		w.Write([]byte("Internal server error occurred"))
-	// 		return
-	// 	}
-	// })
+	// posts the edited form. Need to edit the business logic for this.
+	r.Put("/po/{id}/edit", func(w http.ResponseWriter, r *http.Request) {
+		requestedPoId := chi.URLParam(r, "id")
+		if requestedPoId == "" {
+			// FIX: Need better error responses. Only testing this for now.
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to provide id for po. check url param"))
+			return
+		}
+		// fetching the posted data
+		err := r.ParseForm()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to parse form values"))
+			return
+		}
+		var data models.PurchaseOrder
+		data.Title = r.Form.Get("title")
+		data.Description = r.Form.Get("description")
+		data.Priority = r.Form.Get("priority")
+		data.ID, err = strconv.Atoi(requestedPoId)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to convert po id from string to integer"))
+			return
+		}
+
+		if data.IsEmpty() {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Empty form data"))
+			return
+		}
+
+		_, err = userService.PutPurchaseOrder(data)
+		if err != nil {
+			// TODO: Redirecting for now but need to send back errors next time
+			http.Redirect(w, r, fmt.Sprintf("/user/po/%v", data.ID), http.StatusBadRequest)
+			return
+		}
+		w.Header().Add("HX-Redirect", fmt.Sprintf("/user/po/%v", requestedPoId))
+		return
+	})
 
 	return r
 }

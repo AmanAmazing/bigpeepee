@@ -9,7 +9,7 @@ import (
 // Purchase orders that have a lot of items. That is a very big re-render. Also if the user was editing the
 // items, that would also be lost. :(
 templ EditPurchaseOrder(po models.PurchaseOrder) {
-<form hx-put={ fmt.Sprintf("/po/%v/edit", po.ID) } hx-push-url="true" hx-target="body">
+<form hx-put={ fmt.Sprintf("/user/po/%v/edit", po.ID) } hx-push-url="true">
 	<div class="form-floating mb-3">
 		<input class="form-control" type="text" id="title" name="title" value={ po.Title } required />
 		<label for="title">Title</label>
